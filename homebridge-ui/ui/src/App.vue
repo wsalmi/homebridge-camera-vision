@@ -2,13 +2,10 @@
   <div class="vision-app">
     <header class="topbar">
       <div class="brand-lockup">
-        <div class="brand-mark" aria-hidden="true">
-          <span></span>
-          <span></span>
-        </div>
+        <img class="brand-logo-img" src="@/assets/img/logo.png" alt="Camera Vision" width="38" height="38" />
         <div>
           <div class="brand-name">Camera Vision</div>
-          <div class="brand-caption">Homebridge camera platform</div>
+          <div class="brand-caption">Material camera platform</div>
         </div>
       </div>
 
@@ -235,22 +232,10 @@ a {
   gap: 12px;
 }
 
-.brand-mark {
-  background: var(--vision-accent);
-  border-radius: 12px;
-  display: grid;
-  gap: 4px;
-  grid-template-columns: 1fr 1fr;
-  height: 36px;
-  padding: 9px;
-  transform: rotate(-8deg);
-  width: 36px;
-}
-
-.brand-mark span {
-  background: #ffffff;
-  border-radius: 50%;
-  display: block;
+.brand-logo-img {
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 104, 95, 0.2);
+  object-fit: cover;
 }
 
 .brand-name {

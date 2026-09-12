@@ -1,0 +1,282 @@
+/*
+ * Camera Vision - Google Material Design 3 (M3) Design System
+ * 100% Original Design System, Tokens, and Components
+ */
+
+:root {
+  /* Google Material Design 3 Tonal Palette (Teal / Emerald) */
+  --md-primary: #00685f;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #70f7e7;
+  --md-on-primary-container: #00201d;
+
+  --md-secondary: #4a635f;
+  --md-on-secondary: #ffffff;
+  --md-secondary-container: #cce8e3;
+  --md-on-secondary-container: #05201c;
+
+  --md-tertiary: #456179;
+  --md-on-tertiary: #ffffff;
+  --md-tertiary-container: #cce5ff;
+  --md-on-tertiary-container: #001d32;
+
+  --md-surface: #f4fbf8;
+  --md-surface-dim: #d5dbd9;
+  --md-surface-bright: #f4fbf8;
+  --md-surface-container-lowest: #ffffff;
+  --md-surface-container-low: #eef5f2;
+  --md-surface-container: #e8efec;
+  --md-surface-container-high: #e2e9e6;
+  --md-surface-container-highest: #dce4e1;
+
+  --md-on-surface: #161d1c;
+  --md-on-surface-variant: #3f4947;
+  --md-outline: #6f7977;
+  --md-outline-variant: #bec9c6;
+
+  /* Typography */
+  --md-font: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --md-font-mono: 'Roboto Mono', 'SF Mono', Consolas, monospace;
+
+  /* Elevation */
+  --md-elevation-1: 0 1px 3px 1px rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.08);
+  --md-elevation-2: 0 3px 6px 2px rgba(0, 0, 0, 0.06), 0 2px 4px 0 rgba(0, 0, 0, 0.08);
+  --md-elevation-3: 0 6px 14px 4px rgba(0, 0, 0, 0.08), 0 3px 6px 0 rgba(0, 0, 0, 0.1);
+
+  /* Shape Radii */
+  --md-shape-xs: 4px;
+  --md-shape-s: 8px;
+  --md-shape-m: 16px;
+  --md-shape-l: 24px;
+  --md-shape-xl: 32px;
+  --md-shape-full: 9999px;
+
+  /* Legacy CUI variable mappings to M3 */
+  --cui-primary: var(--md-primary) !important;
+  --cui-primary-rgb: 0, 104, 95 !important;
+  --cui-bg-card: var(--md-surface-container-lowest) !important;
+  --cui-bg-default: var(--md-surface) !important;
+  --cui-text-default: var(--md-on-surface) !important;
+}
+
+[data-theme="dark"],
+.theme--dark {
+  --md-primary: #4edad0;
+  --md-on-primary: #003732;
+  --md-primary-container: #004f48;
+  --md-on-primary-container: #70f7e7;
+
+  --md-secondary: #b1ccc6;
+  --md-on-secondary: #1c3531;
+  --md-secondary-container: #334b47;
+  --md-on-secondary-container: #cce8e3;
+
+  --md-tertiary: #adcae6;
+  --md-on-tertiary: #143349;
+  --md-tertiary-container: #2d4960;
+  --md-on-tertiary-container: #cce5ff;
+
+  --md-surface: #0e1514;
+  --md-surface-dim: #0e1514;
+  --md-surface-bright: #343b39;
+  --md-surface-container-lowest: #090f0f;
+  --md-surface-container-low: #161d1c;
+  --md-surface-container: #1b2120;
+  --md-surface-container-high: #252c2a;
+  --md-surface-container-highest: #303735;
+
+  --md-on-surface: #deece8;
+  --md-on-surface-variant: #bec9c6;
+  --md-outline: #899390;
+  --md-outline-variant: #3f4947;
+
+  --cui-primary: var(--md-primary) !important;
+  --cui-primary-rgb: 78, 218, 208 !important;
+  --cui-bg-card: var(--md-surface-container) !important;
+  --cui-bg-default: var(--md-surface) !important;
+  --cui-text-default: var(--md-on-surface) !important;
+}
+
+/* Global Font & Reset */
+html, body, #app, .v-application {
+  font-family: var(--md-font) !important;
+  background-color: var(--md-surface) !important;
+  color: var(--md-on-surface) !important;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+}
+
+/* Material 3 Top Navigation Bar */
+header.v-app-bar.v-toolbar {
+  background-color: var(--md-surface-container-low) !important;
+  border-bottom: 1px solid var(--md-outline-variant) !important;
+  box-shadow: none !important;
+}
+
+/* Material 3 Sidebar Navigation Rail */
+.v-navigation-drawer,
+aside.v-navigation-drawer {
+  background-color: var(--md-surface-container-low) !important;
+  border-right: 1px solid var(--md-outline-variant) !important;
+  box-shadow: none !important;
+}
+
+/* Navigation items as Material 3 active pills */
+.v-navigation-drawer .v-list-item {
+  border-radius: var(--md-shape-full) !important;
+  margin: 6px 12px !important;
+  padding: 0 16px !important;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1) !important;
+}
+
+.v-navigation-drawer .v-list-item:hover {
+  background-color: rgba(var(--cui-primary-rgb), 0.08) !important;
+}
+
+.v-navigation-drawer .v-list-item--active {
+  background-color: var(--md-primary-container) !important;
+  color: var(--md-on-primary-container) !important;
+  font-weight: 700 !important;
+}
+
+.v-navigation-drawer .v-list-item--active .v-icon {
+  color: var(--md-on-primary-container) !important;
+}
+
+/* Hide old red active border on left rail */
+.sidebar-indicator,
+.v-navigation-drawer .v-list-item--active::before {
+  display: none !important;
+}
+
+/* Material 3 Cards */
+.v-card {
+  background-color: var(--md-surface-container-lowest) !important;
+  border: 1px solid var(--md-outline-variant) !important;
+  border-radius: var(--md-shape-l) !important;
+  box-shadow: var(--md-elevation-1) !important;
+  transition: box-shadow 0.25s cubic-bezier(0.2, 0, 0, 1), transform 0.2s ease !important;
+  overflow: hidden !important;
+}
+
+.v-card:hover {
+  box-shadow: var(--md-elevation-2) !important;
+}
+
+/* Material 3 Buttons */
+.v-btn {
+  border-radius: var(--md-shape-full) !important;
+  text-transform: none !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  font-family: var(--md-font) !important;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1) !important;
+}
+
+.v-btn--contained,
+.v-btn.primary,
+.v-btn[type="submit"] {
+  background-color: var(--md-primary) !important;
+  color: var(--md-on-primary) !important;
+  box-shadow: none !important;
+}
+
+.v-btn--contained:hover,
+.v-btn.primary:hover,
+.v-btn[type="submit"]:hover {
+  box-shadow: var(--md-elevation-1) !important;
+  filter: brightness(1.08);
+}
+
+/* Material 3 Form Inputs */
+.v-text-field--outlined fieldset {
+  border-color: var(--md-outline) !important;
+  border-radius: var(--md-shape-m) !important;
+  transition: border-color 0.2s ease, border-width 0.2s ease !important;
+}
+
+.v-text-field--outlined.v-input--is-focused fieldset {
+  border-color: var(--md-primary) !important;
+  border-width: 2px !important;
+}
+
+.v-text-field input {
+  font-family: var(--md-font) !important;
+}
+
+/* Material 3 Chips & Badges */
+.v-chip {
+  border-radius: var(--md-shape-s) !important;
+  font-weight: 600 !important;
+  font-family: var(--md-font) !important;
+}
+
+.v-chip.v-chip--active,
+.v-chip.primary {
+  background-color: var(--md-primary-container) !important;
+  color: var(--md-on-primary-container) !important;
+}
+
+/* Progress Bars */
+.v-progress-linear {
+  border-radius: var(--md-shape-full) !important;
+  overflow: hidden !important;
+}
+
+.v-progress-linear__determinate,
+.v-progress-linear__indeterminate {
+  background-color: var(--md-primary) !important;
+}
+
+/* Terminal Log Box */
+.terminal,
+pre,
+.log-container,
+.code-container {
+  font-family: var(--md-font-mono) !important;
+  background-color: #0b1110 !important;
+  border: 1px solid var(--md-outline-variant) !important;
+  border-radius: var(--md-shape-m) !important;
+  color: #cde8e3 !important;
+}
+
+/* Material 3 Login Card */
+.login {
+  max-width: 420px !important;
+  border-radius: var(--md-shape-xl) !important;
+  border: 1px solid var(--md-outline-variant) !important;
+  background-color: var(--md-surface-container-lowest) !important;
+  box-shadow: var(--md-elevation-3) !important;
+  padding: 2.5rem !important;
+}
+
+.login-btn {
+  border-radius: var(--md-shape-full) !important;
+  background-color: var(--md-primary) !important;
+  color: var(--md-on-primary) !important;
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+}
+
+.redline {
+  background: var(--md-primary) !important;
+  border-radius: var(--md-shape-full) !important;
+}
+
+.grayline {
+  background: var(--md-outline-variant) !important;
+  border-radius: var(--md-shape-full) !important;
+}
+
+/* Footer Link */
+.footer-link {
+  color: var(--md-outline) !important;
+  font-size: 0.825rem !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+}
+
+.footer-link strong {
+  color: var(--md-primary) !important;
+  font-weight: 700 !important;
+}
