@@ -2,7 +2,7 @@
  * Camera Vision 0.1
  *
  * @url https://github.com/wsalmi/homebridge-camera-vision
- * @author wsalmi
+ * @author wesalmi
  *
  **/
 'use-strict';

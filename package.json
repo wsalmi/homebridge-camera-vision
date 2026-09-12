@@ -2,7 +2,10 @@
   "name": "homebridge-camera-vision",
   "version": "0.1.0",
   "description": "Homebridge camera platform with Apple HomeKit Secure Video recording, motion detection and a modern camera dashboard.",
-  "author": "wsalmi (https://github.com/wsalmi)",
+  "author": {
+    "name": "wesalmi",
+    "url": "https://github.com/wsalmi"
+  },
   "scripts": {
     "build": "npm run build --prefix homebridge-ui/ui",
     "lint": "concurrently \"npm run lint:homebridge-ui\" \"npm run lint:plugin\"",
