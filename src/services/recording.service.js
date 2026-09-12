@@ -218,12 +218,13 @@ export default class RecordingDelegate {
         //'2'
       );
 
-      if (vcodec === 'libx264') {
+      const customEncoderOptions = this.accessory.context.config.hksvConfig?.encoderOptions;
+      if (vcodec === 'libx264' && (!customEncoderOptions || !customEncoderOptions.includes('-preset'))) {
         videoArguments.push('-preset', 'ultrafast', '-tune', 'zerolatency');
       }
 
-      if (this.accessory.context.config.hksvConfig?.encoderOptions) {
-        videoArguments.push(...this.accessory.context.config.hksvConfig.encoderOptions.split(' '));
+      if (customEncoderOptions) {
+        videoArguments.push(...customEncoderOptions.split(' '));
       }
     }
 
