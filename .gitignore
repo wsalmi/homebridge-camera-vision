@@ -147,7 +147,7 @@ yarn-error.log
 
 # Custom rules (everything added below won't be overriden by 'Generate .gitignore File' if you use 'Update' option)
 
-interface
+# interface is tracked to provide Camera Vision standalone UI
 test/storage/
 # homebridge-ui/public is tracked so installations from GitHub include pre-built UI
 homebridge-ui/ui/node_modules

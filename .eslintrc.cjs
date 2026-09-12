@@ -5,7 +5,7 @@ module.exports = {
     sourceType: 'module',
     requireConfigFile: false,
   },
-  ignorePatterns: ['homebridge-ui', 'node_modules'],
+  ignorePatterns: ['homebridge-ui', 'node_modules', 'interface'],
   plugins: ['@babel', 'prettier', 'unicorn'],
   extends: ['eslint:recommended', 'plugin:prettier/recommended', 'plugin:unicorn/recommended'],
   root: true,

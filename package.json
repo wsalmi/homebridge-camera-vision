@@ -10,6 +10,7 @@
     "lint:plugin": "eslint .",
     "test": "node --test --test-reporter=spec",
     "watch": "npm run serve --prefix homebridge-ui/ui",
+    "postinstall": "node scripts/sync-interface.js",
     "prepublishOnly": "npm install --package-lock-only && npm run lint && npm test && npm run build"
   },
   "main": "index.js",

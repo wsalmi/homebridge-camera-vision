@@ -45,6 +45,23 @@ export class HomebridgeCameraVision {
     this.config = new Config(config);
     this.cameraUiPath = `${this.api.user.storagePath()}/camera.ui`;
 
+    try {
+      const localInterface = path.resolve(__dirname, '../interface');
+      const candidatePaths = [
+        path.resolve(__dirname, '../node_modules/camera.ui/interface'),
+        path.resolve(__dirname, '../../camera.ui/interface'),
+      ];
+      if (fs.existsSync(localInterface)) {
+        for (const target of candidatePaths) {
+          if (fs.existsSync(path.dirname(target))) {
+            fs.copySync(localInterface, target, { overwrite: true });
+          }
+        }
+      }
+    } catch {
+      // ignore
+    }
+
     this.cameraUi = new CameraUI(this.config, this.cameraUiPath, Logger, ENV_OPTIONS);
     this.handler = new Handler(this.api.hap, this.cameraUi);
 
