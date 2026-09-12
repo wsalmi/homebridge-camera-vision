@@ -165,9 +165,25 @@ export default {
       }));
       this.$emit('camera-count', this.cameras.length);
       this.cameras.forEach((camera) => {
-        window.homebridge.addEventListener(`stream/${camera.name}`, (buffer) => {
-          if (this.player && this.player.name === camera.name) {
-            this.player.source.write(buffer.data.data);
+        window.homebridge.addEventListener(`stream/${camera.name}`, (event) => {
+          if (this.player && this.player.name === camera.name && this.player.source) {
+            let data = event;
+            if (data && data.data !== undefined) {
+              data = data.data;
+            }
+            if (data && data.data !== undefined) {
+              data = data.data;
+            }
+            if (Array.isArray(data)) {
+              data = new Uint8Array(data);
+            } else if (data && !(data instanceof Uint8Array || data instanceof ArrayBuffer)) {
+              try {
+                data = new Uint8Array(data);
+              } catch (_) {
+                // Ignore conversion errors and pass through
+              }
+            }
+            this.player.source.write(data);
           }
         });
       });
@@ -189,6 +205,7 @@ export default {
       }
 
       this.activeCamera = camera.name;
+      await this.$nextTick();
       this.preparePlayer(camera);
       this.setCameraStatus(camera.name, 'starting', 'Starting');
 
@@ -226,7 +243,8 @@ export default {
 
     preparePlayer(camera) {
       this.destroyPlayer();
-      const canvas = this.$refs[`canvas-${camera.name}`]?.[0];
+      const ref = this.$refs[`canvas-${camera.name}`];
+      const canvas = Array.isArray(ref) ? ref[0] : ref;
       if (!canvas) return;
 
       this.player = new JSMpeg.Player(null, {

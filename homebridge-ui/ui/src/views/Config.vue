@@ -86,8 +86,7 @@ export default {
 
   methods: {
     openSchema() {
-      if (!window.homebridge.updatePluginConfig || !window.homebridge.showSchemaForm) return;
-      window.homebridge.updatePluginConfig([{}]);
+      if (!window.homebridge || !window.homebridge.showSchemaForm) return;
       window.homebridge.showSchemaForm();
     },
   },

@@ -25,7 +25,7 @@
     </header>
 
     <div class="app-shell">
-      <aside class="sidebar">
+      <aside class="vision-sidebar">
         <div class="sidebar-section-label">Workspace</div>
         <nav class="primary-nav" aria-label="Primary navigation">
           <router-link class="nav-item" to="/cameras">
@@ -110,12 +110,17 @@ export default {
   async mounted() {
     window.homebridge.showSpinner();
 
-    window.homebridge.addEventListener('ready', async () => {
-      document.documentElement.setAttribute(
-        'data-theme',
-        window.document.body.classList.contains('dark-mode') ? 'dark' : 'light'
-      );
+    const applyTheme = () => {
+      const isDark =
+        window.document.body.classList.contains('dark-mode') ||
+        window.document.body.classList.contains('config-ui-x-dark-mode') ||
+        window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    };
 
+    const loadPlatformData = async () => {
+      if (this.systemOnline) return;
+      applyTheme();
       try {
         const [interfaceConfig, status] = await Promise.all([
           window.homebridge.request('/interfaceConfig'),
@@ -130,12 +135,19 @@ export default {
         this.cameraCount = status?.cameraCount || 0;
         this.hksvEnabled = Boolean(status?.hksvEnabled);
         this.systemOnline = true;
-      } catch (error) {
-        window.homebridge.toast.error('Unable to load the Homebridge status.');
+      } catch (_) {
+        // Platform status load handled quietly
       } finally {
         window.homebridge.hideSpinner();
       }
+    };
+
+    window.homebridge.addEventListener('ready', () => {
+      loadPlatformData();
     });
+
+    // Run immediately if ready event already occurred
+    loadPlatformData();
   },
 };
 </script>
@@ -176,7 +188,8 @@ export default {
 html,
 body,
 #app {
-  min-height: 100%;
+  height: auto;
+  min-height: 0;
   margin: 0;
 }
 
@@ -192,8 +205,9 @@ a {
 }
 
 .vision-app {
-  min-height: 100vh;
+  min-height: 520px;
   background: var(--vision-bg);
+  color: var(--vision-text);
 }
 
 .topbar {
@@ -299,10 +313,11 @@ a {
 .app-shell {
   display: grid;
   grid-template-columns: 228px minmax(0, 1fr);
-  min-height: calc(100vh - 76px);
+  min-height: 480px;
 }
 
-.sidebar {
+.vision-sidebar {
+  background: var(--vision-surface) !important;
   border-right: 1px solid var(--vision-border);
   display: flex;
   flex-direction: column;
@@ -311,6 +326,7 @@ a {
 
 .sidebar-section-label,
 .eyebrow {
+  color: var(--vision-muted) !important;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.13em;
@@ -330,7 +346,7 @@ a {
 .nav-item {
   align-items: center;
   border-radius: 10px;
-  color: var(--vision-muted);
+  color: var(--vision-muted) !important;
   display: flex;
   font-size: 13px;
   font-weight: 700;
@@ -342,8 +358,8 @@ a {
 
 .nav-item:hover,
 .nav-item.router-link-exact-active {
-  background: var(--vision-accent-soft);
-  color: var(--vision-accent-strong);
+  background: var(--vision-accent-soft) !important;
+  color: var(--vision-accent-strong) !important;
 }
 
 .nav-icon {
@@ -367,7 +383,7 @@ a {
 }
 
 .platform-card {
-  background: var(--vision-surface);
+  background: var(--vision-surface-soft) !important;
   border: 1px solid var(--vision-border);
   border-radius: 12px;
   gap: 10px;
@@ -393,10 +409,12 @@ a {
 }
 
 .platform-card strong {
+  color: var(--vision-text) !important;
   font-size: 11px;
 }
 
 .platform-card span:not(.platform-icon) {
+  color: var(--vision-muted) !important;
   font-size: 10px;
   margin-top: 3px;
 }
@@ -470,7 +488,8 @@ a {
     display: block;
   }
 
-  .sidebar {
+  .vision-sidebar {
+    background: var(--vision-surface) !important;
     border-bottom: 1px solid var(--vision-border);
     border-right: 0;
     padding: 14px 18px;

@@ -149,7 +149,7 @@ yarn-error.log
 
 interface
 test/storage/
-homebridge-ui/public
+# homebridge-ui/public is tracked so installations from GitHub include pre-built UI
 homebridge-ui/ui/node_modules
 test.js
 hsv_videos

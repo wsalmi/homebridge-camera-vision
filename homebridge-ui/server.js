@@ -215,11 +215,20 @@ class UiServer extends HomebridgePluginUiServer {
         mapaudio: '',
       };
       const args = ['-analyzeduration', '0', '-probesize', '5000', ...source.split(/\s+/)];
-      const process = childProcess.spawn(videoProcessor, args, { env: process.env });
-      const stderr = readline.createInterface({ input: process.stderr, terminal: false });
+      let childProc;
+      try {
+        childProc = childProcess.spawn(videoProcessor, args, { env: process.env });
+      } catch (err) {
+        console.error(`${cameraName}: Failed to spawn probe process:`, err);
+        return resolve(codecs);
+      }
+
+      const stderr = readline.createInterface({ input: childProc.stderr, terminal: false });
       const timeout = setTimeout(() => {
         codecs.timedout = true;
-        process.kill('SIGKILL');
+        try {
+          childProc.kill('SIGKILL');
+        } catch (_) {}
       }, 10000);
 
       stderr.on('line', (line) => {
@@ -236,14 +245,15 @@ class UiServer extends HomebridgePluginUiServer {
         lines += 1;
       });
 
-      process.on('exit', () => {
+      childProc.on('exit', () => {
         clearTimeout(timeout);
         stderr.close();
         console.log(`${cameraName}: ${JSON.stringify(codecs)}`);
         resolve(codecs);
       });
-      process.on('error', () => {
+      childProc.on('error', (err) => {
         clearTimeout(timeout);
+        console.error(`${cameraName}: probe process error:`, err);
         resolve(codecs);
       });
     });
