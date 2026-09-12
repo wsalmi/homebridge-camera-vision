@@ -166,7 +166,10 @@ export default class CameraDelegate {
         : undefined,
       sensors: this.accessory.context.config.hsv
         ? {
-            motion: this.accessory.getServiceById(this.api.hap.Service.MotionSensor, 'motion') || true,
+            motion:
+              this.accessory.getServiceById(this.api.hap.Service.MotionSensor, 'motion') ||
+              this.accessory.getService(this.api.hap.Service.MotionSensor) ||
+              true,
             occupancy: this.accessory.getServiceById(this.api.hap.Service.OccupancySensor, 'occupancy') || false, //not implemented yet
           }
         : undefined,

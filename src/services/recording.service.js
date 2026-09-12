@@ -76,10 +76,14 @@ export default class RecordingDelegate {
       audioArguments.push('-map', videoConfig.mapaudio);
     }
 
-    let acodec = this.accessory.context.config.hksvConfig?.acodec || videoConfig.acodec;
-    let vcodec = this.accessory.context.config.hksvConfig?.vcodec || videoConfig.vcodec;
+    let acodec = this.accessory.context.config.hksvConfig?.acodec;
+    let vcodec = this.accessory.context.config.hksvConfig?.vcodec;
 
-    let audioEnabled = this.accessory.context.config.hksvConfig?.audio || videoConfig.audio;
+    if (!vcodec) {
+      vcodec = videoConfig.vcodec && videoConfig.vcodec !== 'copy' ? videoConfig.vcodec : 'libx264';
+    }
+
+    let audioEnabled = this.accessory.context.config.hksvConfig?.audio ?? videoConfig.audio;
     let audioSourceFound = controller?.media.codecs.audio.length;
     let probeAudio = controller?.media.codecs.audio;
     let incompatibleAudio = audioSourceFound && !probeAudio.some((codec) => compatibleAudio.test(codec));
@@ -94,10 +98,8 @@ export default class RecordingDelegate {
             'Homebridge'
           );
           acodec = 'libfdk_aac';
-          //vcodec = vcodec === 'copy' ? 'libx264' : vcodec;
         } else if (!incompatibleAudio && !acodec) {
-          this.log.debug('Compatible audio stream detected, copying..');
-          acodec = 'copy';
+          acodec = 'libfdk_aac';
         }
       } else {
         this.log.debug(
@@ -153,7 +155,6 @@ export default class RecordingDelegate {
           `${this.configuration.audioCodec.audioChannels}`
         );
       } else {
-        vcodec = 'copy';
         audioArguments.push('-bsf:a', 'aac_adtstoasc', '-acodec', 'copy');
       }
     } else {
@@ -217,6 +218,10 @@ export default class RecordingDelegate {
         //'2'
       );
 
+      if (vcodec === 'libx264') {
+        videoArguments.push('-preset', 'ultrafast', '-tune', 'zerolatency');
+      }
+
       if (this.accessory.context.config.hksvConfig?.encoderOptions) {
         videoArguments.push(...this.accessory.context.config.hksvConfig.encoderOptions.split(' '));
       }
@@ -224,7 +229,7 @@ export default class RecordingDelegate {
 
     this.session = await cameraUtils.startFFMPegFragmetedMP4Session(
       this.accessory.displayName,
-      this.accessory.context.config.videoConfig,
+      Boolean(this.accessory.context.config.videoConfig?.debug),
       this.config.options.videoProcessor,
       ffmpegInput,
       audioArguments,
