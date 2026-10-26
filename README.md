@@ -1,46 +1,81 @@
 # Homebridge Camera Vision
 
-**Homebridge Camera Vision** é um plugin de plataforma para expor câmeras RTSP ao Apple HomeKit. Ele usa o fork `wsalmi/homebridge-camera-ui` como ponto de partida, mas reorganiza a identidade do pacote, moderniza a interface embarcada e prepara o ciclo de vida das câmeras para o Homebridge v2.
+**Homebridge Camera Vision** é um plugin de plataforma para o Homebridge. Ele publica câmeras com fonte FFmpeg, em geral RTSP, no Apple HomeKit e mantém um painel local para acompanhar essas câmeras.
 
-A solução combina streaming H.264 via FFmpeg, snapshots, sensores de movimento, campainha opcional, prebuffering e **HomeKit Secure Video (HKSV)**. Quando o HKSV está habilitado, o Home app continua sendo responsável por armazenar as gravações no iCloud; o plugin fornece ao HomeKit os fragments de vídeo e os eventos necessários para a gravação orientada por movimento.
+O app Casa continua responsável pelas gravações do HomeKit Secure Video (HKSV) no iCloud. O plugin entrega o stream, os fragments de vídeo e o evento de movimento que o HomeKit usa para iniciar a captura.
 
-## Estado do projeto
+A base de execução é a biblioteca npm `camera.ui` 1.1.17: painel web, análise de vídeo e entrada de eventos por HTTP, MQTT, SMTP e FTP. Este repositório registra a plataforma `CameraVision`, adapta o ciclo de vida ao Homebridge 1.6 e 2, e acrescenta uma interface própria no Homebridge Config UI X. Blocos de configuração já gravados com o alias `CameraUI` continuam sendo lidos.
 
-| Área | Estado |
-| --- | --- |
-| Registro como plataforma `CameraVision` | Implementado |
-| Compatibilidade declarada com Homebridge v1.6 e v2 | Implementado |
-| `CameraController` e `RecordingDelegate` para HKSV | Mantidos e ajustados |
-| Detecção por vídeo, HTTP, MQTT, SMTP e FTP | Preservada do fork |
-| Nova UI embarcada | Implementada em Vue com CSS próprio |
-| Dashboard live com JSMpeg | Implementado |
-| Sanitização de credenciais RTSP na UI | Implementada |
-| Testes com câmera física e gravação real no iCloud | Requer ambiente HomeKit do usuário |
+## Funcionalidades
 
-> O plugin precisa de uma fonte RTSP válida e de um binário FFmpeg acessível. O comportamento final do HKSV também depende de um Home Hub e de um plano iCloud compatível com o recurso da Apple.
+- Plataforma `CameraVision`, marcada como única no `config.schema.json`.
+- Stream, snapshot e substream via FFmpeg. A fonte precisa conter o argumento `-i`.
+- `CameraController` do HAP-NodeJS, com `RecordingDelegate` para HKSV em MP4 fragmentado.
+- Sensor de movimento, campainha opcional e interruptores de privacidade, exclusão e “At Home”.
+- Prebuffer de 4 a 8 segundos antes do evento, quando `prebuffering` está ativo.
+- Eventos de movimento e campainha vindos da análise de vídeo ou de HTTP, MQTT, SMTP e FTP, tratados pelo handler deste repositório.
+- Painel web do `camera.ui`, com os arquivos de `interface/` rebatizados para Camera Vision. As telas compiladas incluem login, dashboard, câmeras, visualização, gravações, notificações, console, configurações, plugins e utilização.
+- Interface do plugin no Homebridge: lista de câmeras, filtros, busca e preview ao vivo com JSMpeg. A lista enviada ao navegador traz nome, modelo, resolução e sinais de HKSV, movimento e áudio. A URL RTSP permanece no `config.json` e só é usada no processo FFmpeg do servidor. A tela de configuração abre o formulário nativo do schema do Homebridge.
+
+Câmeras sem nome, sem `videoConfig.source`, com `source` sem `-i`, com `disable: true` ou com nome repetido não são publicadas. O comportamento final do HKSV também depende de um Home Hub e de um plano iCloud compatível com o recurso da Apple.
+
+## Stack
+
+- Node.js com módulos ESM
+- Homebridge 1.6 ou 2 e HAP-NodeJS
+- `camera.ui` 1.1.17
+- FFmpeg, pelo binário de `ffmpeg-for-homebridge` ou pelo caminho em `options.videoProcessor`
+- UI do plugin: Vue 2, Vue Router 3 e Vue CLI 4, com `@seydx/jsmpeg` no preview
+- Testes do Node.js (`node --test`) e ESLint
+
+## Requisitos
+
+- Node.js `^22.12.0` ou `^24.0.0`, conforme `engines` em `package.json`.
+- Homebridge `^1.6.0` ou `^2.0.0`. O código desliga o HKSV se a versão do Homebridge for anterior a 1.4.0.
+- Uma fonte que o FFmpeg consiga abrir. O valor de `videoConfig.source` tem de incluir `-i`.
+- FFmpeg. Sem `options.videoProcessor`, a configuração usa o binário exportado por `ffmpeg-for-homebridge`.
 
 ## Instalação
 
-Durante o desenvolvimento local, clone o projeto e instale suas dependências:
+O nome do pacote é `homebridge-camera-vision`. No Homebridge ele é carregado como plugin de plataforma. A partir deste repositório:
 
 ```bash
 git clone https://github.com/wsalmi/homebridge-camera-vision.git
 cd homebridge-camera-vision
 npm install
+```
+
+`npm install` foi executado neste ambiente. O `postinstall` chama `node scripts/sync-interface.js`, que copia `interface/` para a pasta de interface do `camera.ui` quando esse destino existe.
+
+A UI do Homebridge Config UI X tem o próprio `package-lock.json`. Para compilá-la:
+
+```bash
+npm ci --prefix homebridge-ui/ui
 npm run build
 ```
 
-Para uma instalação global depois que o pacote for publicado:
+Os dois comandos foram executados com sucesso. O bundle sai em `homebridge-ui/public`. O script de build da UI define `NODE_OPTIONS=--openssl-legacy-provider` porque o Vue CLI 4 usa Webpack 4.
 
-```bash
-sudo npm install -g homebridge-camera-vision@latest
-```
+Depois da instalação, adicione a plataforma `CameraVision` ao `config.json` do Homebridge. Os dados de runtime do `camera.ui` ficam em `<diretório de storage do Homebridge>/camera.ui`.
 
-No Homebridge Config UI, adicione a plataforma **Camera Vision** e abra a UI do plugin pela entrada customizada. A interface nova não exibe as URLs RTSP no navegador; as credenciais permanecem no `config.json` e são usadas somente no backend.
+## Comandos
 
-## Configuração mínima
+| Comando | Função |
+| --- | --- |
+| `npm test` | Executa `node --test` sobre `test/`. |
+| `npm run lint:plugin` | Roda o ESLint do plugin, ignorando `homebridge-ui`, `interface` e `node_modules`. |
+| `npm run lint` | Roda o ESLint do plugin e o lint da UI. A parte da UI precisa das dependências de `homebridge-ui/ui`. |
+| `npm run lint:homebridge-ui` | Atalho para o lint só da UI. |
+| `npm run build` | Compila a UI do plugin para `homebridge-ui/public`. |
+| `npm run watch` | Sobe o servidor de desenvolvimento da UI com `vue-cli-service serve`, na porta 8082. |
 
-A configuração usa o schema do Homebridge. O campo `source` deve conter a opção `-i` do FFmpeg:
+Não há script `start` nem workflow de CI. O hook `prepublishOnly` encadeia atualização do lockfile, `npm run lint`, `npm test` e `npm run build`.
+
+Neste ambiente, `npm test` terminou com 4 testes aprovados e `npm run lint:plugin` terminou sem erros. `npm run lint` completo da UI não foi executado.
+
+## Configuração
+
+O bloco fica em `platforms` no `config.json` do Homebridge. O formulário está em [`config.schema.json`](./config.schema.json). Um exemplo mais longo está em [`example-config.json`](./example-config.json). Troque usuários, senhas e endereços pelos da sua rede antes de usar esse exemplo.
 
 ```json
 {
@@ -49,6 +84,7 @@ A configuração usa o schema do Homebridge. O campo `source` deve conter a opç
       "platform": "CameraVision",
       "name": "CameraVision",
       "port": 8081,
+      "logLevel": "info",
       "cameras": [
         {
           "name": "Sala",
@@ -58,8 +94,8 @@ A configuração usa o schema do Homebridge. O campo `source` deve conter a opç
           "prebuffering": true,
           "prebufferLength": 4,
           "videoConfig": {
-            "source": "-i rtsp://usuario:senha@192.168.1.20:554/stream",
-            "stillImageSource": "-i http://192.168.1.20/snapshot.jpg",
+            "source": "-i rtsp://usuario:senha@192.0.2.20:554/stream",
+            "stillImageSource": "-i http://192.0.2.20/snapshot.jpg",
             "rtspTransport": "tcp",
             "maxWidth": 1280,
             "maxHeight": 720,
@@ -78,78 +114,90 @@ A configuração usa o schema do Homebridge. O campo `source` deve conter a opç
 }
 ```
 
-O arquivo [`example-config.json`](./example-config.json) contém um exemplo mais extenso com sensores auxiliares, MQTT, fontes de gravação HKSV e configurações avançadas de FFmpeg. Para reduzir o risco de exposição acidental, use credenciais de teste no exemplo e substitua-as localmente.
+### Campos principais
 
-## HomeKit Secure Video
-
-O HKSV é habilitado por câmera com `hsv: true`. O plugin registra o `CameraController` com uma configuração de gravação fragmentada em MP4 e associa o sensor de movimento ao evento que o HomeKit utiliza para iniciar a captura. A câmera HKSV é anunciada com uma sessão de vídeo dedicada, enquanto a UI do plugin pode continuar exibindo o preview live.
-
-A gravação pode usar a fonte principal ou uma fonte específica em `hksvConfig.source`. Se a câmera não fornecer áudio compatível, o fluxo pode operar sem áudio ou usar a transcodificação definida no schema. Para reduzir latência, `prebuffering` conserva alguns segundos antes do evento, quando a câmera e o processamento local suportam esse modo.
-
-| Opção | Função |
+| Campo | Função |
 | --- | --- |
-| `hsv` | Habilita os serviços de gravação do HomeKit |
-| `hksvConfig.source` | Define uma fonte exclusiva para gravação |
-| `hksvConfig.vcodec` | Define cópia ou transcodificação H.264 |
-| `hksvConfig.acodec` | Define cópia ou transcodificação AAC |
-| `prebuffering` | Tenta incluir alguns segundos anteriores ao movimento |
-| `prebufferLength` | Define o tamanho do prebuffer, entre 4 e 8 segundos |
+| `platform` | Use `CameraVision`. Na leitura, `CameraUI` também é aceito. |
+| `name` | Nome da plataforma. O padrão do schema é `CameraVision`. |
+| `port` | Porta do painel web. O padrão da biblioteca é 8081. |
+| `logLevel` | `info`, `debug`, `warn` ou `error`. |
+| `atHomeSwitch` | Publica o acessório “At Home Switch”. |
+| `options.videoProcessor` | Executável FFmpeg alternativo. |
+| `ssl.active`, `ssl.key`, `ssl.cert` | HTTPS do painel. A biblioteca só ativa o SSL com os três valores presentes. |
+| `cameras[].name` | Nome único. Ele identifica o acessório no HomeKit. |
+| `cameras[].disable` | Não publica a câmera. |
+| `cameras[].unbridge` | Publica a câmera como acessório externo. O schema marca isso como recomendado. |
+| `cameras[].hsv` | Liga o HomeKit Secure Video. |
+| `cameras[].motion`, `cameras[].doorbell`, `cameras[].switches` | Sensor, campainha e interruptores manuais de disparo. |
+| `cameras[].privacySwitch`, `cameras[].excludeSwitch` | Interruptores de privacidade e de exclusão do modo “em casa”. |
+| `cameras[].motionTimeout` | Segundos até o reset automático. O código aceita 0 a 170 e usa 15 fora desse intervalo. |
+| `cameras[].motionDelay` | Espera de 0 a 10 segundos antes de tratar um evento externo. |
+| `cameras[].prebuffering`, `cameras[].prebufferLength`, `cameras[].forcePrebuffering` | Prebuffer. O comprimento válido é 4 a 8 segundos; qualquer outro valor vira 4. |
+| `cameras[].videoConfig.source` | Argumentos FFmpeg da fonte, incluindo `-i`. |
+| `cameras[].videoConfig.subSource`, `cameras[].videoConfig.stillImageSource` | Substream e snapshot. Sem `-i` válido, o código reutiliza `source`. |
+| `cameras[].hksvConfig.source`, `vcodec`, `acodec`, `audio` | Fonte e codecs usados só na gravação HKSV. |
+| `cameras[].videoanalysis.active` | Análise de vídeo do `camera.ui` para detecção de movimento. |
+| `mqtt`, `http`, `smtp`, `ftp` | Entradas de automação. Cada uma só sobe com `active: true`. |
 
-O suporte de API segue o modelo atual do HAP-NodeJS: o `CameraController` recebe `recording.delegate`, `recording.options` e sensores opcionais, em vez de usar a API legada `cameraSource` [1] [2].
+`mqtt.username` e `mqtt.password` autenticam o cliente MQTT. Guarde esses valores só no `config.json` local.
 
-## Detecção de movimento
+### HomeKit Secure Video
 
-A detecção local pode comparar frames de uma substream por análise de vídeo. Também é possível receber um evento externo por HTTP, MQTT, SMTP ou FTP. O `Handler` centraliza a transição do sensor, aplica o atraso e o timeout configurados e aciona o evento HKSV quando o recurso está habilitado.
+Com `hsv: true`, a câmera registra um `CameraController` com delegate de gravação, contêiner MP4 fragmentado e o sensor de movimento como gatilho. `hksvConfig.source` aponta uma fonte exclusiva para essa gravação. `hksvConfig.vcodec` e `hksvConfig.acodec` escolhem cópia do fluxo ou transcodificação. Sem áudio compatível, a gravação pode seguir só com vídeo.
 
-O endpoint HTTP, quando ativado, segue o formato abaixo:
+### HTTP, MQTT, SMTP e FTP
+
+Quando a porta não vem no `config.json`, `camera.ui` aplica estes padrões:
+
+| Serviço | Porta padrão | Uso |
+| --- | --- | --- |
+| Painel web | 8081 | Campo `port`. |
+| HTTP | 7272 | `/motion?<nome>`, `/motion/reset?<nome>` e `/doorbell?<nome>`. |
+| SMTP | 2727 | E-mail associado à câmera em `cameras[].smtp`. |
+| FTP | 5050 | Envio de arquivo. `ftp.useFile` escolhe se o nome da câmera vem do arquivo ou do diretório. |
+| MQTT | 1883 | Tópicos em `cameras[].mqtt`, com `mqtt.tls`, `mqtt.host`, `mqtt.username` e `mqtt.password`. |
+
+O nome da câmera é a query string inteira. Espaços precisam de codificação de URL. Exemplo com a porta padrão e uma câmera chamada Sala:
 
 ```text
-http://localhost:8123/motion?Sala
+http://<host>:7272/motion?Sala
 ```
 
-Para MQTT, configure um tópico específico por câmera e uma mensagem de ativação e, opcionalmente, outra de reset. Em instalações com sensores externos, `motionDelay` pode compensar a diferença entre a detecção do sensor e a chegada do vídeo.
+Com `http.localhttp: true`, esse servidor HTTP escuta apenas em localhost. O handler deste repositório recebe o evento já emitido pelo `camera.ui`, respeita `motionDelay` e `motionTimeout`, atualiza o sensor do HomeKit e, se o cliente MQTT da interface estiver conectado e a câmera tiver tópico de notificação, publica o estado nesse tópico.
 
-## Nova interface
+## Variáveis de ambiente
 
-A UI embarcada foi reconstruída com uma identidade própria de **Camera Vision**. Ela oferece navegação lateral, indicador de conexão com o Homebridge, filtro por câmeras online ou com HKSV, busca, cards responsivos e preview live. O transporte binário de preview por eventos do Homebridge foi preservado para evitar uma migração desnecessária do pipeline FFmpeg/JSMpeg.
+A configuração do plugin fica no `config.json` do Homebridge. O código e os scripts consultam estes nomes:
 
-A tela de configuração usa o formulário nativo do Homebridge. Assim, a experiência visual pode evoluir sem duplicar a validação do schema nem criar uma segunda fonte de verdade para o `config.json`.
+| Nome | Uso |
+| --- | --- |
+| `NODE_ENV` | Com o valor `test`, o logger interno começa em `debug` até a plataforma aplicar `logLevel`. |
+| `NODE_OPTIONS` | Os scripts `build` e `serve` de `homebridge-ui/ui` definem `--openssl-legacy-provider`. |
 
-## Compatibilidade Homebridge v2
+Os processos FFmpeg herdam o ambiente do processo do Homebridge.
 
-O pacote declara os seguintes engines:
+## Estrutura
 
-```json
-{
-  "node": "^22.12.0 || ^24.0.0",
-  "homebridge": "^1.6.0 || ^2.0.0"
-}
+```text
+index.js                      registra a plataforma CameraVision
+src/platform.js               ciclo de vida, acessórios e gravação do config.json
+src/accessories/              câmera, movimento, campainha e interruptores
+src/services/                 processo FFmpeg, gravação HKSV e handler de eventos
+services/config/              validação e limites da configuração
+services/logger/              adaptação do logger do camera.ui
+homebridge-ui/server.js       pedidos da UI do Homebridge: status, câmeras e preview
+homebridge-ui/ui/             fonte Vue dessa UI
+homebridge-ui/public/         bundle gerado por npm run build
+interface/                    painel camera.ui compilado e rebatizado
+scripts/sync-interface.js     copia interface/ no postinstall
+scripts/rebrand-interface.py  reaplica o nome Camera Vision nos arquivos do painel
+test/plugin-contract.test.js  registro da plataforma, config e CameraController
+config.schema.json            formulário do Homebridge
+example-config.json           exemplo de config.json
+CHANGELOG.md                  histórico herdado do camera.ui
 ```
-
-A migração remove o quarto argumento do registro de plataforma, usa `getServiceById()` para serviços auxiliares, mantém `versionGreaterOrEqual()` somente para compatibilidade condicional do Homebridge e usa `CameraController` para streaming e gravação. A plataforma aceita a leitura de configurações com o alias histórico `CameraUI` no backend da UI, mas novas instalações devem usar `CameraVision`.
-
-O Homebridge v2 altera componentes internos do HAP-NodeJS e recomenda declarar compatibilidade somente depois de testar o plugin com a versão v2 [1]. O build automatizado deste repositório usa o Homebridge 2 como dependência de desenvolvimento.
-
-## Desenvolvimento e validação
-
-Os comandos principais são:
-
-```bash
-npm run lint
-npm test
-NODE_OPTIONS=--openssl-legacy-provider npm run build
-```
-
-O `NODE_OPTIONS` ainda é necessário porque o frontend mantém o pipeline Vue CLI/Webpack 4 para permanecer compatível com o ambiente de UI do Homebridge. O bundle final é escrito em `homebridge-ui/public` e empacotado com o plugin.
-
-## Referências
-
-[1]: https://github.com/homebridge/homebridge/wiki/Updating-To-Homebridge-v2.0 "Homebridge — Updating To Homebridge v2.0"
-
-[2]: https://developers.homebridge.io/HAP-NodeJS/interfaces/CameraControllerOptions.html "HAP-NodeJS — CameraControllerOptions"
-
-[3]: https://github.com/wsalmi/homebridge-camera-ui "Fork utilizado como inspiração"
 
 ## Licença
 
-Este projeto é distribuído sob a licença MIT. Consulte [`LICENSE`](./LICENSE) para o texto completo.
+Distribuído sob a licença MIT. O arquivo [`LICENSE`](./LICENSE) registra o copyright de 2020–2022 em nome de seydx.
